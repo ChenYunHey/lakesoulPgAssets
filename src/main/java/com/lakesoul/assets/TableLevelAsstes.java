@@ -94,21 +94,17 @@ public class TableLevelAsstes extends KeyedProcessFunction<String, PartitionCoun
 
         // 防止文件数目或文件大小计算为负值
         int newBaseFileCounts = Math.max(0, currentBaseFileCount + fileBaseCounts - oldPartitionBaseFileCount);
-        int newFileCounts = Math.max(0, currentFileCount + fileCounts - oldPartitionFileCount);
+        int newFileCounts = currentFileCount + fileCounts - oldPartitionFileCount;
         long newBaseFileSize = Math.max(0, currentBaseFileSize + partitionBaseSize - oldPartitionBaseFileSize);
-        long newFileSize = Math.max(0, currentFileSize + partitionSize - oldPartitionFileSize);
+        long newFileSize = currentFileSize + partitionSize - oldPartitionFileSize;
 
         int partitionCount = 0;
         partitionCountStateValue.put(partitionDesc, true);
-        if (fileCounts==0 && oldPartitionBaseFileCount > 0){
+        if (fileCounts==0 && partitionCountStateValue.contains(partitionDesc)){
             partitionCountStateValue.remove(partitionDesc);
         }
         for (String key : partitionCountStateValue.keys()) {
             partitionCount++;
-        }
-
-        if (newFileCounts == 0) {
-            partitionCount = 0;
         }
 
         TableCounts tableCounts = new TableCounts(tableId, partitionCount, newBaseFileCounts,

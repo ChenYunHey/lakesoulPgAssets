@@ -80,7 +80,6 @@ public class CountDataAssets {
                 .keyBy(value -> value.f1).process(new PartitionLevelAssets.PartitionLevelProcessFunction()).keyBy(value -> value.tableId)
                 .process(new TableLevelAsstes());
 
-
         SingleOutputStreamOperator<TableCountsWithTableInfo> tableCountsStreaming = mainProcess.getSideOutput(tableInfoTag)
                 .keyBy(value -> value.f1)
                 .connect(datacommitInfoStream.keyBy(value -> value.tableId))
@@ -118,7 +117,7 @@ public class CountDataAssets {
                         .build(),
                 build
         );
-        //tableCountsStreaming.addSink(sink);
+        tableCountsStreaming.addSink(sink);
 
         //统计namespace级别的资产
         String dataBaseLevelAssetsSql = "INSERT INTO namespace_level_assets (namespace, table_counts, partition_counts, file_counts, file_total_size, file_base_counts, file_base_size) " +
@@ -143,9 +142,9 @@ public class CountDataAssets {
                         .build(),
                 build
         );
-//        tableCountsStreaming.keyBy(value -> value.namespace)
-//                .process(new NamespaceLevelAssets())
-//                .addSink(namespaceAssetsSink);
+        tableCountsStreaming.keyBy(value -> value.namespace)
+                .process(new NamespaceLevelAssets())
+                .addSink(namespaceAssetsSink);
 
         //统计domain级别的资产
 
@@ -171,9 +170,9 @@ public class CountDataAssets {
                         .build(),
                 build
         );
-//        tableCountsStreaming.keyBy(value -> value.domain)
-//                .process(new DomainLevelAssets())
-//                .addSink(domainAssetsSink);
+        tableCountsStreaming.keyBy(value -> value.domain)
+                .process(new DomainLevelAssets())
+                .addSink(domainAssetsSink);
         //用户级别资产统计
         String userLevelAssetsSql = "INSERT INTO user_level_assets (creator, table_counts, partition_counts, file_counts, file_total_size, file_base_counts, file_base_size) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?) " +
@@ -196,23 +195,10 @@ public class CountDataAssets {
                         .withMaxRetries(0)
                         .build(),
 
-
-
-
-
-
-
                 build
         );
-
- //       tableCountsStreaming.print();
-//
-//        mainProcess.getSideOutput(dataCommitInfoTag)
-//                .keyBy(value -> value.f1).process(new PartitionLevelAssets.PartitionLevelProcessFunction())
-//                .keyBy(value -> value.tableId)
-//                .process(new TableLevelAsstes()).print();
-                tableCountsStreaming.keyBy(value -> value.domain)
-                .process(new UserLevelAssets()).print();
+                tableCountsStreaming.keyBy(value -> value.creator)
+                .process(new UserLevelAssets()).addSink(userLevelAssetsSink);
         env.execute();
     }
 }

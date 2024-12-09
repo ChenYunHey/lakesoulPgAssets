@@ -147,7 +147,7 @@ public class PartitionLevelAssets {
         @Override
         public void processElement(Tuple3<String, String, String[]> value, Context ctx, Collector<PartitionCounts> out) throws Exception {
             //PartitionCounts partitionCounts = new PartitionCounts()
-            System.out.println(value);
+            //System.out.println(value);
             String tableId = value.f1.split(" ")[0];
             String partitionDesc = value.f1.split(" ")[1];
             int currentFileCountValue = Integer.parseInt(value.f2[0]);
@@ -168,9 +168,6 @@ public class PartitionLevelAssets {
             long newTotalFileSize;
             if (enventOp.equals("delete") && beforeCommitted && committed){
                 newTotalFileCount = previousTotalFileCountValue - currentFileCountValue;
-                if (newTotalFileCount < 0){
-                    System.out.println("ssssssss");
-                }
                 newTotalFileSize = fileBytesSizePreviousTotalValue - currentFileBytesSize;
                 partitionTotalFileCountValue.update(newTotalFileCount);
                 partitionTotalSizeValue.update(newTotalFileSize);
@@ -196,8 +193,8 @@ public class PartitionLevelAssets {
                         newBaseFileCount = currentFileCountValue;
                         newBaseFileSize = currentFileBytesSize;
                     } else {
-                        newBaseFileCount = previousBaseFileCountValue + currentFileCountValue;
-                        newBaseFileSize = fileBytesSizePreviousBaseValue + currentFileBytesSize;
+                        newBaseFileCount = newTotalFileCount == 0? 0 : previousBaseFileCountValue + currentFileCountValue;
+                        newBaseFileSize = newTotalFileCount == 0? 0 : fileBytesSizePreviousBaseValue + currentFileBytesSize;
                     }
                     newBaseFileCount = Math.max(0, newBaseFileCount);  // 防止负值
                     newBaseFileSize = Math.max(0, newBaseFileSize);
